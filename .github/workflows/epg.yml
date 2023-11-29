@@ -1,0 +1,41 @@
+name: EPG
+
+on:
+  schedule:
+    - cron: 6 * * * *
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: export xml-file
+        working-directory: xml
+        run: curl -ssL https://epg.112114.xyz/pp.xml -o e.xml
+
+      - name: xml to json
+        run: |
+          pip3 install -r requirements.txt
+          python3 xml2json.py
+
+      - name: copy file
+        run: |
+          now_date=$(date -u -d '+8 hour' '+%Y-%m-%d')
+          cp -f ./xml/e.xml ./xml/e_$now_date.xml
+          cp -f ./json/e.json ./json/e_$now_date.json
+
+      - name: Commit
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          sed "2c * 更新时间: $(date -u -d '+8 hour' '+%Y-%m-%d %H:%M:%S')" README.md -i
+          git add --all
+          git commit -m "update"
+          git push -f origin main
