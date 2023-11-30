@@ -20,18 +20,29 @@ jobs:
         working-directory: xml
         run: curl -ssL https://epg.112114.xyz/pp.xml -o e.xml
 
+      - name: check md5
+        run: |
+          md5=$(md5sum ./xml/e.xml | awk '{print $1}')
+          if ! grep -q "$md5" ./md5.txt; then
+            echo "isDiff=$md5" >> $GITHUB_ENV
+          fi
+
       - name: xml to json
+        if: ${{ env.isDiff }}
         run: |
           pip3 install -r requirements.txt
           python3 xml2json.py
 
-      - name: copy file
+      - name: move file
+        if: ${{ env.isDiff }}
         run: |
           now_date=$(date -u -d '+8 hour' '+%Y-%m-%d')
           cp -f ./xml/e.xml ./xml/e_$now_date.xml
-          cp -f ./json/e.json ./json/e_$now_date.json
+          mv -f ./json/e.json ./json/e_$now_date.json
+          echo "${{ env.isDiff }}" > ./md5.txt
 
       - name: Commit
+        if: ${{ env.isDiff }}
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"

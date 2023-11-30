@@ -1,5 +1,11 @@
 const repository = 'celetor/epg';
 
+const init = {
+    headers: {
+        'content-type': 'application/json',
+    },
+};
+
 function makeRes(body, status = 200, headers = {}) {
     headers['access-control-allow-origin'] = '*';
     return new Response(body, {status, headers});
@@ -38,19 +44,19 @@ function getFormatTime(time) {
 }
 
 async function diypHandle(channel, date, request) {
-    const res = await fetch(new Request(`https://raw.githubusercontent.com/${repository}/epg/json/e_${date}.json`, request));
+    const res = await fetch(new Request(`https://raw.githubusercontent.com/${repository}/main/json/e_${date}.json`, request));
     const response = await res.json();
 
-    console.log(channel, date)
-    const result = {
+    console.log(channel, date);
+    const program_info = {
         "date": date,
         "channel_name": channel,
         "url": `https://github.com/${repository}`,
         "epg_data": []
     }
     response.forEach(function (element) {
-        if (element['@channel'] === channel && element['@start'].startsWith(date.replace(/-/g, ''))) {
-            result['epg_data'].push({
+        if (element['@channel'] === channel && element['@start'].startsWith(date.replaceAll('-', ''))) {
+            program_info['epg_data'].push({
                 "start": getFormatTime(element['@start'])['time'],
                 "end": getFormatTime(element['@stop'])['time'],
                 "title": element['title']['#text'],
@@ -59,13 +65,16 @@ async function diypHandle(channel, date, request) {
         }
 
     });
-    console.log(result)
-    const init = {
-        headers: {
-            'content-type': 'application/json',
-        },
-    };
-    return new Response(JSON.stringify(result), init);
+    console.log(program_info);
+    if (program_info['epg_data'].length === 0) {
+        program_info['epg_data'].push({
+            "start": "00:00",
+            "end": "23:59",
+            "title": "未知节目",
+            "desc": ""
+        });
+    }
+    return new Response(JSON.stringify(program_info), init);
 }
 
 async function fetchHandler(event) {
@@ -76,31 +85,18 @@ async function fetchHandler(event) {
     let date = uri.searchParams.get("date");
 
     if (!channel || channel.length === 0) {
-        return fetch(new Request(`https://raw.githubusercontent.com/${repository}/epg/xml/e.xml`, request));
+        return fetch(new Request(`https://raw.githubusercontent.com/${repository}/main/xml/e.xml`, request));
     }
     if (!date) {
         date = getNowDate();
     }
 
-    switch (date.length) {
-        case 8:
-            date = getFormatTime(date)['date'];
-            break;
-        case 10:
-            break;
-        default:
-            date = getNowDate();
-            break;
-    }
+    date = getFormatTime(date.replace(/\D+/g, ''))['date'];
+    channel = channel.replaceAll('-', '').toUpperCase();
 
-    if (parseInt(date.replace(/-/g, '')) >= 20231122) {
+    if (parseInt(date.replaceAll('-', '')) >= 20231122) {
         return diypHandle(channel, date, request);
     } else {
-        const init = {
-            headers: {
-                'content-type': 'application/json',
-            },
-        };
         return new Response(JSON.stringify({
             "date": date,
             "channel_name": channel,
@@ -108,7 +104,8 @@ async function fetchHandler(event) {
             "epg_data": [{
                 "start": "00:00",
                 "end": "23:59",
-                "title": "精彩节目"
+                "title": "未知节目",
+                "desc": ""
             }]
         }), init);
     }
