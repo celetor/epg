@@ -2,23 +2,44 @@ name: EPG
 
 on:
   schedule:
-    - cron: 6 * * * *
+    - cron: 0,30 * * * *
   push:
     branches:
       - main
+      - master
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - author: sparkssssssssss
+            url: https://epg.112114.xyz/pp.xml.gz
+            branch: main
+    #          - author: supzhang
+    #            url: http://epg.51zmt.top:8000/e.xml.gz
+    #            branch: master
+
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ matrix.branch }}
 
-      - name: export xml-file
+      - name: download xml-file
         working-directory: xml
-        run: curl -ssL https://epg.112114.xyz/pp.xml -o e.xml
+        run: |
+          url="${{ matrix.url }}"
+          if [[ "$url" == *".gz" ]]; then
+            echo "url以gz结尾"
+            wget $url -O e.xml.gz
+            gzip -df e.xml.gz
+          else
+            echo "url不以gz结尾"
+            wget $url -O e.xml
+          fi
 
       - name: check md5
         run: |
@@ -49,4 +70,4 @@ jobs:
           sed "2c * 更新时间: $(date -u -d '+8 hour' '+%Y-%m-%d %H:%M:%S')" README.md -i
           git add --all
           git commit -m "update"
-          git push -f origin main
+          git push -f origin ${{ matrix.branch }}

@@ -1,8 +1,12 @@
-const repository = 'celetor/epg';
+const Config = {
+    repository: 'celetor/epg',
+    branch: 'main'
+}
 
 const init = {
+    status: 200,
     headers: {
-        'content-type': 'application/json',
+        'content-type': 'application/json'
     },
 };
 
@@ -12,10 +16,11 @@ function makeRes(body, status = 200, headers = {}) {
 }
 
 function getNowDate() {
-    let utc_timestamp = new Date().getTime();
-    let china_timestamp = utc_timestamp + 8 * 60 * 60 * 1000;
-    let china_time = new Date(china_timestamp);
-    return `${china_time.getFullYear()}-${china_time.getMonth() + 1}-${china_time.getDate()}`;
+    const utc_timestamp = (new Date()).getTime();
+    const china_time = new Date(utc_timestamp + 8 * 60 * 60 * 1000);
+    const month = china_time.getMonth() + 1;
+    const day = china_time.getDate();
+    return `${china_time.getFullYear()}-${month < 10 ? '0' + month : month}-${day < 10 ? '0' + day : day}`;
 }
 
 function getFormatTime(time) {
@@ -44,14 +49,14 @@ function getFormatTime(time) {
 }
 
 async function diypHandle(channel, date, request) {
-    const res = await fetch(new Request(`https://raw.githubusercontent.com/${repository}/main/json/e_${date}.json`, request));
+    const res = await fetch(new Request(`https://raw.githubusercontent.com/${Config.repository}/${Config.branch}/json/e_${date}.json`, request));
     const response = await res.json();
 
     console.log(channel, date);
     const program_info = {
         "date": date,
         "channel_name": channel,
-        "url": `https://github.com/${repository}`,
+        "url": `https://github.com/${Config.repository}`,
         "epg_data": []
     }
     response.forEach(function (element) {
@@ -60,7 +65,7 @@ async function diypHandle(channel, date, request) {
                 "start": getFormatTime(element['@start'])['time'],
                 "end": getFormatTime(element['@stop'])['time'],
                 "title": element['title']['#text'],
-                "desc": ''
+                "desc": (element['desc'] && element['desc']['#text']) ? element['desc']['#text'] : ''
             });
         }
 
@@ -82,16 +87,22 @@ async function fetchHandler(event) {
     let uri = new URL(request.url);
 
     let channel = uri.searchParams.get("ch");
-    let date = uri.searchParams.get("date");
-
     if (!channel || channel.length === 0) {
-        return fetch(new Request(`https://raw.githubusercontent.com/${repository}/main/xml/e.xml`, request));
+        const xml_res = await fetch(new Request(
+            `https://raw.githubusercontent.com/${Config.repository}/${Config.branch}/xml/e.xml`, request
+        ));
+        const xml_blob = await xml_res.blob();
+        init['headers']['content-type'] = 'text/xml';
+        return new Response(xml_blob, init);
     }
-    if (!date) {
+
+    let date = uri.searchParams.get("date");
+    if (date) {
+        date = getFormatTime(date.replace(/\D+/g, ''))['date'];
+    } else {
         date = getNowDate();
     }
 
-    date = getFormatTime(date.replace(/\D+/g, ''))['date'];
     channel = channel.replaceAll('-', '').toUpperCase();
 
     if (parseInt(date.replaceAll('-', '')) >= 20231122) {
@@ -100,7 +111,7 @@ async function fetchHandler(event) {
         return new Response(JSON.stringify({
             "date": date,
             "channel_name": channel,
-            "url": `https://github.com/${repository}`,
+            "url": `https://github.com/${Config.repository}`,
             "epg_data": [{
                 "start": "00:00",
                 "end": "23:59",
