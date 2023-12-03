@@ -2,7 +2,8 @@ name: EPG
 
 on:
   schedule:
-    - cron: 0,30 * * * *
+    - cron: 0 * * * *
+    - cron: 30 0,12,23 * * *
   push:
     branches:
       - main
@@ -16,11 +17,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - author: sparkssssssssss
-            url: https://epg.112114.xyz/pp.xml.gz
+          - url: https://epg.112114.xyz/pp.xml.gz
             branch: main
-          - author: supzhang
-            url: http://epg.51zmt.top:8000/e.xml
+          - url: http://epg.51zmt.top:8000/e.xml
             branch: master
 
     steps:
