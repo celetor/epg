@@ -20,7 +20,7 @@ jobs:
             url: https://epg.112114.xyz/pp.xml.gz
             branch: main
           - author: supzhang
-            url: http://epg.51zmt.top:8000/e.xml.gz
+            url: http://epg.51zmt.top:8000/e.xml
             branch: master
 
     steps:
