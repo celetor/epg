@@ -19,9 +19,9 @@ jobs:
           - author: sparkssssssssss
             url: https://epg.112114.xyz/pp.xml.gz
             branch: main
-    #          - author: supzhang
-    #            url: http://epg.51zmt.top:8000/e.xml.gz
-    #            branch: master
+          - author: supzhang
+            url: http://epg.51zmt.top:8000/e.xml.gz
+            branch: master
 
     steps:
       - uses: actions/checkout@v4
