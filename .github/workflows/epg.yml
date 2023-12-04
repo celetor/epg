@@ -66,7 +66,8 @@ jobs:
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          sed "2c * 更新时间: $(date -u -d '+8 hour' '+%Y-%m-%d %H:%M:%S')" README.md -i
+          now_time=$(date -u -d '+8 hour' '+%Y-%m-%d %H:%M:%S')
+          sed "2c * 更新时间: $now_time" README.md -i
           git add --all
-          git commit -m "update"
+          git commit -m "$now_time"
           git push -f origin ${{ matrix.branch }}
