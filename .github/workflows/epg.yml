@@ -3,7 +3,7 @@ name: EPG
 on:
   schedule:
     - cron: 0 * * * *
-    - cron: 30 0,12,23 * * *
+    - cron: 30 4,10,15,16 * * *
   push:
     branches:
       - main
