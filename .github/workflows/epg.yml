@@ -2,12 +2,7 @@ name: EPG
 
 on:
   schedule:
-    - cron: 0 * * * *
-    - cron: 30 4,10,15,16 * * *
-  push:
-    branches:
-      - main
-      - master
+    - cron: 0,30 4,10,15,16 * * *
   workflow_dispatch:
 
 jobs:
