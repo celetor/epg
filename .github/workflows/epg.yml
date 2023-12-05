@@ -2,7 +2,8 @@ name: EPG
 
 on:
   schedule:
-    - cron: 0,30 4,10,15,16 * * *
+    - cron: 0 4,10,16,22 * * *
+    - cron: 0,30 15 * * *
   workflow_dispatch:
 
 jobs:
@@ -18,38 +19,51 @@ jobs:
             branch: master
 
     steps:
-      - uses: actions/checkout@v4
+      - name: download md5.txt
+        uses: actions/checkout@v4
         with:
           ref: ${{ matrix.branch }}
+          sparse-checkout: |
+            md5.txt
+          sparse-checkout-cone-mode: false
 
       - name: download xml-file
-        working-directory: xml
         run: |
           url="${{ matrix.url }}"
           if [[ "$url" == *".gz" ]]; then
-            echo "url以gz结尾"
+            echo "url is end with gz"
             wget $url -O e.xml.gz
             gzip -df e.xml.gz
           else
-            echo "url不以gz结尾"
+            echo "url is not end with gz"
             wget $url -O e.xml
           fi
 
       - name: check md5
         run: |
-          md5=$(md5sum ./xml/e.xml | awk '{print $1}')
+          md5=$(md5sum ./e.xml | awk '{print $1}')
           if ! grep -q "$md5" ./md5.txt; then
             echo "isDiff=$md5" >> $GITHUB_ENV
           fi
 
+      - name: checkout code
+        uses: actions/checkout@v4
+        if: ${{ env.isDiff }}
+        with:
+          ref: ${{ matrix.branch }}
+          path: epg
+
       - name: xml to json
         if: ${{ env.isDiff }}
+        working-directory: epg
         run: |
+          mv -f ../e.xml ./xml/e.xml
           pip3 install -r requirements.txt
           python3 xml2json.py
 
       - name: move file
         if: ${{ env.isDiff }}
+        working-directory: epg
         run: |
           now_date=$(date -u -d '+8 hour' '+%Y-%m-%d')
           cp -f ./xml/e.xml ./xml/e_$now_date.xml
@@ -58,6 +72,7 @@ jobs:
 
       - name: Commit
         if: ${{ env.isDiff }}
+        working-directory: epg
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
