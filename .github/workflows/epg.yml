@@ -19,16 +19,9 @@ jobs:
             branch: master
 
     steps:
-      - name: download md5.txt
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ matrix.branch }}
-          sparse-checkout: |
-            md5.txt
-          sparse-checkout-cone-mode: false
-
-      - name: download xml-file
+      - name: download files
         run: |
+          wget https://raw.githubusercontent.com/${{ github.repository }}/${{ matrix.branch }}/md5.txt -O md5.txt
           url="${{ matrix.url }}"
           if [[ "$url" == *".gz" ]]; then
             echo "url is end with gz"
