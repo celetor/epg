@@ -1,5 +1,5 @@
 #### 节目表
-* 更新时间: 2023-12-30 00:41:14
+* 更新时间: 2023-12-30 06:12:30
 * 数据来自[supzhang/epg](https://github.com/supzhang/epg)，将2023/12/03（含）以后的数据备份至本项目
 * 将`worker.js`的内容复制到[CF Workers](https://workers.cloudflare.com/)中保存，即可从本项目获取节目表数据
   - 不论是`XML`格式还是`Diyp & 百川`的格式，都直接填`https://epg2.celetor.tk`即可
