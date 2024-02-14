@@ -14,9 +14,9 @@ jobs:
       matrix:
         include:
           - url: https://epg.112114.xyz/pp.xml.gz
-            branch: main
+            branch: 112114
           - url: http://epg.51zmt.top:8000/e.xml
-            branch: master
+            branch: 51zmt
 
     steps:
       - name: download files
@@ -84,10 +84,9 @@ jobs:
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          now_time=$(date -u -d '+8 hour' '+%Y-%m-%d %H:%M:%S')
           sed "2c * 更新时间: ${{ env.now_time }}" README.md -i
-          rm -f ./xml
-          rm -f ./json
+          rm -rf ./xml
+          rm -rf ./json
           git add --all
-          git commit -m "$now_time"
+          git commit -m "${{ env.now_time }}"
           git push -f origin ${{ matrix.branch }}

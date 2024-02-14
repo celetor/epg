@@ -1,6 +1,6 @@
 const Config = {
     repository: 'celetor/epg',
-    branch: 'main'
+    branch: '112114'
 }
 
 const init = {
@@ -9,6 +9,46 @@ const init = {
         'content-type': 'application/json'
     },
 };
+
+
+async function jq_fetch(request) {
+    let times = 5;
+    let real_url = '';
+    let isRedirect = false;
+    let response = await fetch(request);
+
+    while (times > 0) {
+        console.log('status', response.status);
+        if (response.status === 301 || response.status === 302) {
+            isRedirect = true;
+            real_url = response.headers.get('location');
+        } else if (response.redirected === true) {
+            isRedirect = true;
+            real_url = response.url;
+        } else {
+            break;
+        }
+        if (isRedirect) {
+            console.log('real_url', real_url);
+            let init = {
+                'headers': {}
+            };
+            for (var p of response.headers) {
+                if (p[0].toLowerCase() !== 'location') {
+                    if (p[0].toLowerCase() === 'set-cookie') {
+                        init.headers['cookie'] = p[1];
+                    } else {
+                        init.headers[p[0]] = p[1];
+                    }
+                }
+            }
+            response = await fetch(new Request(real_url, init));
+            console.log('response', response);
+            times -= 1;
+        }
+    }
+    return response;
+}
 
 function makeRes(body, status = 200, headers = {}) {
     headers['access-control-allow-origin'] = '*';
@@ -49,7 +89,9 @@ function getFormatTime(time) {
 }
 
 async function diypHandle(channel, date, request) {
-    const res = await fetch(new Request(`https://raw.githubusercontent.com/${Config.repository}/${Config.branch}/json/e_${date}.json`, request));
+    const tag = date.replaceAll('-', '.');
+    // https://github.com/celetor/epg/releases/download/2024.02.14/112114.json
+    const res = await jq_fetch(new Request(`https://github.com/${Config.repository}/releases/download/${tag}/${Config.branch}.json`, request));
     const response = await res.json();
 
     console.log(channel, date);
@@ -88,8 +130,8 @@ async function fetchHandler(event) {
 
     let channel = uri.searchParams.get("ch");
     if (!channel || channel.length === 0) {
-        const xml_res = await fetch(new Request(
-            `https://raw.githubusercontent.com/${Config.repository}/${Config.branch}/xml/e.xml`, request
+        const xml_res = await jq_fetch(new Request(
+            `https://github.com/${Config.repository}/releases/latest/download/${Config.branch}.xml`, request
         ));
         const xml_blob = await xml_res.blob();
         init['headers']['content-type'] = 'text/xml';
@@ -104,8 +146,7 @@ async function fetchHandler(event) {
     }
 
     channel = channel.replaceAll('-', '').toUpperCase();
-
-    if (parseInt(date.replaceAll('-', '')) >= 20231122) {
+    if (parseInt(date.replaceAll('-', '')) >= 202402214) {
         return diypHandle(channel, date, request);
     } else {
         return new Response(JSON.stringify({
