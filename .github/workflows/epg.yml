@@ -17,7 +17,7 @@ jobs:
             branch: 112114
           - url: http://epg.51zmt.top:8000/e.xml
             branch: 51zmt
-          - url: https://epg.erw.cc/e.xml.gz
+          - url: https://gitee.com/Black_crow/xmlgz/raw/master/e.xml.gz
             branch: erw
 
     steps:
