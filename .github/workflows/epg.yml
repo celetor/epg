@@ -3,7 +3,7 @@ name: EPG
 on:
   schedule:
     - cron: 0 4,10,22 * * *
-    - cron: 36 15,16 * * *
+    - cron: 39 15,16 * * *
   workflow_dispatch:
 
 jobs:
