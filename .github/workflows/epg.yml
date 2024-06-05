@@ -15,8 +15,8 @@ jobs:
         include:
           - url: https://epg.112114.xyz/pp.xml.gz
             branch: 112114
-          - url: http://epg.51zmt.top:8000/e.xml
-            branch: 51zmt
+          #- url: http://epg.51zmt.top:8000/e.xml
+          #  branch: 51zmt
           - url: https://gitee.com/Black_crow/xmlgz/raw/master/e.xml.gz
             branch: erw
 
