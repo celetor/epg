@@ -21,14 +21,13 @@ jobs:
           tag=$(date -d "8 hour" -u +%Y.%m.%d)
           echo "tag=$tag" >> $GITHUB_OUTPUT
           echo "tag=$tag" >> GITHUB_ENV
-          echo '$tag, $now_time, ${{ github.ref }}'
-      - id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          tag_name: ${{ env.tag }}
-          release_name: ${{ env.tag }}
+          echo '$tag, $now_time'
+          curl -L -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            https://api.github.com/repos/celetor/epg/releases \
+            -d '{"tag_name":"${{ env.tag }}","target_commitish":"112114","name":"${{ env.tag }}","body":"create","draft":false,"prerelease":false,"generate_release_notes":false}'
+
 
 
   build:
