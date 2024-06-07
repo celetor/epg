@@ -1,0 +1,107 @@
+name: EPG
+
+on:
+  schedule:
+    - cron: 0 4,10,22 * * *
+    - cron: 39 15,16 * * *
+  workflow_dispatch:
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      now_time: ${{ steps.set-ver.outputs.now_time }}
+      tag: ${{ steps.set-ver.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: set-ver
+        run: |
+          now_time=$(date -u -d '+8 hour' '+%Y-%m-%d %H:%M:%S')
+          echo "now_time=$now_time" >> $GITHUB_OUTPUT
+          tag=$(date -d "8 hour" -u +%Y.%m.%d)
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+          echo "tag=$tag" >> GITHUB_ENV
+          echo '$tag, $now_time, ${{ github.ref }}'
+
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - url: https://epg.112114.xyz/pp.xml.gz
+            branch: 112114
+          #- url: http://epg.51zmt.top:8000/e.xml
+          #  branch: 51zmt
+          - url: https://gitee.com/Black_crow/xmlgz/raw/master/e.xml.gz
+            branch: erw
+    steps:
+      - name: download files
+        run: |
+          wget https://raw.githubusercontent.com/${{ github.repository }}/${{ matrix.branch }}/md5.txt -O md5.txt
+          url="${{ matrix.url }}"
+          if [[ "$url" == *".gz" ]]; then
+            echo "url is end with gz"
+            wget $url -O e.xml.gz
+            gzip -df e.xml.gz
+          else
+            echo "url is not end with gz"
+            wget $url -O e.xml
+          fi
+
+      - name: check md5
+        run: |
+          md5=$(md5sum ./e.xml | awk '{print $1}')
+          if ! grep -q "$md5" ./md5.txt; then
+            echo "isDiff=$md5" >> $GITHUB_ENV
+          fi
+
+      - name: checkout code
+        uses: actions/checkout@v4
+        if: ${{ env.isDiff }}
+        with:
+          ref: ${{ matrix.branch }}
+          path: epg
+
+      - name: xml to json
+        if: ${{ env.isDiff }}
+        working-directory: epg
+        run: |
+          mkdir ./xml ./json
+          mv -f ../e.xml ./xml/e.xml
+          pip3 install -r requirements.txt
+          python3 xml2json.py
+
+      - name: move file
+        if: ${{ env.isDiff }}
+        working-directory: epg
+        run: |
+          now_date=$(date -u -d '+8 hour' '+%Y-%m-%d')
+          mv -f ./xml/e.xml ./xml/${{ matrix.branch }}.xml
+          mv -f ./json/e.json ./json/${{ matrix.branch }}.json
+          echo "${{ env.isDiff }}" > ./md5.txt
+
+      - uses: ncipollo/release-action@v1
+        if: ${{ env.isDiff }}
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          body: "更新时间: ${{ needs.prepare.outputs.now_time }}"
+          allowUpdates: true
+          artifacts: |
+            epg/xml/*.xml
+            epg/json/*.json
+
+      - name: Commit
+        if: ${{ env.isDiff }}
+        working-directory: epg
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          sed "2c * 更新时间: ${{ needs.prepare.outputs.now_time }}" README.md -i
+          rm -rf ./xml
+          rm -rf ./json
+          git add --all
+          git commit -m "${{ needs.prepare.outputs.now_time }}"
+          git push -f origin ${{ matrix.branch }}
