@@ -15,13 +15,14 @@ jobs:
         include:
           - url: https://epg.112114.xyz/pp.xml.gz
             branch: 112114
-            sleep: 0
-          #- url: http://epg.51zmt.top:8000/e.xml
-          #  branch: 51zmt
-          #  sleep: 30
+            sleep: 0s
           - url: https://gitee.com/Black_crow/xmlgz/raw/master/e.xml.gz
             branch: erw
-            sleep: 60
+            sleep: 30s
+          #- url: http://epg.51zmt.top:8000/e.xml
+          #  branch: 51zmt
+          #  sleep: 60s
+
     steps:
       - name: download files
         run: |
