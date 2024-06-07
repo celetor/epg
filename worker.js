@@ -1,6 +1,6 @@
 const Config = {
     repository: 'celetor/epg',
-    branch: 'erw'
+    branch: '112114'
 }
 
 const init = {
@@ -146,7 +146,7 @@ async function fetchHandler(event) {
     }
 
     channel = channel.replaceAll('-', '').toUpperCase();
-    if (parseInt(date.replaceAll('-', '')) >= 20240408) {
+    if (parseInt(date.replaceAll('-', '')) >= 20240214) {
         return diypHandle(channel, date, request);
     } else {
         return new Response(JSON.stringify({
