@@ -1,6 +1,6 @@
 const Config = {
     repository: 'celetor/epg',
-    branch: 'erw'
+    branch: '112114'
 }
 
 const init = {
