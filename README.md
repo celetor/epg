@@ -1,5 +1,5 @@
 #### 节目表
-* 更新时间: 2024-09-23 12:14:56
+* 更新时间: 2024-09-23 18:14:10
 * 数据来自[Black_crow/xmlgz](https://gitee.com/Black_crow/xmlgz)，将2024/04/08（含）以后的数据备份至本项目
 * 将`worker.js`的内容复制到[CF Workers](https://workers.cloudflare.com/)中保存，即可从本项目获取节目表数据
   - 不论是`XML`格式还是`Diyp & 百川`的格式，都直接填`对应URL`即可
