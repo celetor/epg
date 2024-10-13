@@ -55,14 +55,19 @@ jobs:
           ref: ${{ matrix.branch }}
           path: epg
 
+      - uses: actions/setup-python@v5
+        if: ${{ env.isDiff }}
+        with:
+          python-version: '3.7' 
+
       - name: xml to json
         if: ${{ env.isDiff }}
         working-directory: epg
         run: |
           mkdir ./xml ./json
           mv -f ../e.xml ./xml/e.xml
-          pip3 install -r requirements.txt
-          python3 xml2json.py
+          pip install -r requirements.txt
+          python xml2json.py
 
       - name: move file
         if: ${{ env.isDiff }}
