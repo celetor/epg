@@ -1,5 +1,5 @@
 #### 节目表
-* 更新时间: 2024-10-23 18:12:51
+* 更新时间: 2024-10-23 23:44:35
 * 数据来自[sparks/epg](https://github.com/sparkssssssssss/epg)，将2024/02/14（含）以后的数据备份至本项目
 * 将`worker.js`的内容复制到[CF Workers](https://workers.cloudflare.com/)中保存，即可从本项目获取节目表数据
   - 不论是`XML`格式还是`Diyp & 百川`的格式，都直接填`对应URL`即可
