@@ -1,3 +1,4 @@
+// main.ts
 const Config = {
     repository: 'celetor/epg',
     branch: '112114'
@@ -10,12 +11,11 @@ const init = {
     },
 };
 
-// 使用 Cloudflare Cache API 进行缓存
-async function jq_fetch(request) {
+async function jq_fetch(request, cacheKey) {
     const cache = await caches.open('epg-cache');
-    const cachedResponse = await cache.match(request);
+    const cachedResponse = await cache.match(cacheKey);
     if (cachedResponse) {
-        return cachedResponse; // 直接返回缓存
+        return cachedResponse; // 返回缓存
     }
 
     let times = 5;
@@ -49,9 +49,8 @@ async function jq_fetch(request) {
         }
     }
 
-    // 缓存响应（仅在成功时缓存）
     if (response.ok) {
-        await cache.put(request, response.clone());
+        await cache.put(cacheKey, response.clone()); // 使用自定义缓存键
     }
     return response;
 }
@@ -95,10 +94,9 @@ function getFormatTime(time) {
 
 async function diypHandle(channel, date, request) {
     const tag = date.replaceAll('-', '.');
-    const res = await jq_fetch(new Request(
-        `https://github.com/${Config.repository}/releases/download/${tag}/${Config.branch}.json`,
-        request
-    ));
+    const targetUrl = `https://github.com/${Config.repository}/releases/download/${tag}/${Config.branch}.json`;
+    const cacheKey = `${targetUrl}?ch=${channel}`; // 缓存键包含 channel 和 date（通过 tag）
+    const res = await jq_fetch(new Request(targetUrl, request), cacheKey);
     const response = await res.json();
 
     const program_info = {
@@ -136,10 +134,9 @@ async function fetchHandler(event) {
 
     let channel = uri.searchParams.get("ch");
     if (!channel || channel.length === 0) {
-        const xml_res = await jq_fetch(new Request(
-            `https://github.com/${Config.repository}/releases/latest/download/${Config.branch}.xml`,
-            request
-        ));
+        const targetUrl = `https://github.com/${Config.repository}/releases/latest/download/${Config.branch}.xml`;
+        const cacheKey = targetUrl; // XML 文件缓存键
+        const xml_res = await jq_fetch(new Request(targetUrl, request), cacheKey);
         const xml_blob = await xml_res.blob();
         init['headers']['content-type'] = 'text/xml';
         return new Response(xml_blob, init);
