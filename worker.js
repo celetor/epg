@@ -91,7 +91,7 @@ function getFormatTime(time) {
 async function diypHandle(channel, date, request) {
     const tag = date.replaceAll('-', '.');
     // https://github.com/celetor/epg/releases/download/2024.02.14/112114.json
-    const res = await jq_fetch(new Request(`https://github.com/${Config.repository}/releases/download/${tag}/${Config.branch}.json`, request));
+    const res = await jq_fetch(new Request(`https://github.com/${Config.repository}/releases/download/${tag}/${Config.branch}.json`));
     const response = await res.json();
 
     console.log(channel, date);
@@ -131,7 +131,7 @@ async function fetchHandler(event) {
     let channel = uri.searchParams.get("ch");
     if (!channel || channel.length === 0) {
         const xml_res = await jq_fetch(new Request(
-            `https://github.com/${Config.repository}/releases/latest/download/${Config.branch}.xml`, request
+            `https://github.com/${Config.repository}/releases/latest/download/${Config.branch}.xml`
         ));
         const xml_blob = await xml_res.blob();
         init['headers']['content-type'] = 'text/xml';
