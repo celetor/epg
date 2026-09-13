@@ -164,6 +164,9 @@ async function fetchHandler(event) {
 }
 
 addEventListener('fetch', event => {
-    const ret = fetchHandler(event).catch(err => makeRes('cfworker error:\n' + err.stack, 502));
+    const ret = fetchHandler(event).catch(err => {
+        console.log('cfworker error:', err.stack);
+        return makeRes('cfworker error', 502);
+    });
     event.respondWith(ret)
 })
